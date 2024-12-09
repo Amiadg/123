@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Learn Spanish Math</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #E6F2FF;
+            margin: 0;
+            text-align: center;
+            direction: rtl;
+        }
+        #game-container {
+            background-color: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .option-btn {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 18px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: background-color 0.3s;
+            position: relative;
+        }
+        .audio-btn {
+            background-color: #3498DB;
+            color: white;
+            padding: 10px;
+            margin-left: 10px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="score">ניקוד: 0</div>
+        <div id="language-hint">לומדים מספרים בספרדית!</div>
+        <div id="question" class="question">?כמה זה</div>
+        <div id="options"></div>
+    </div>
+
+    <script>
+        const translations = {
+            numbers: {
+                spanish: {
+                    0: 'cero', 1: 'uno', 2: 'dos', 3: 'tres', 4: 'cuatro', 
+                    5: 'cinco', 6: 'seis', 7: 'siete', 8: 'ocho', 
+                    9: 'nueve', 10: 'diez'
+                },
+                hebrew: {
+                    0: 'אפס', 1: 'אחד', 2: 'שניים', 3: 'שלוש', 4: 'ארבע', 
+                    5: 'חמש', 6: 'שש', 7: 'שבע', 8: 'שמונה', 
+                    9: 'תשע', 10: 'עשר'
+                }
+            },
+            words: {
+                plus: {
+                    spanish: 'más',
+                    hebrew: 'פלוס'
+                },
+                equals: {
+                    spanish: '¿Cuánto es',
+                    hebrew: 'כמה זה'
+                }
+            }
+        };
+
+        class SpanishMathLearningGame {
+            constructor() {
+                this.score = 0;
+                this.questionElement = document.getElementById('question');
+                this.optionsElement = document.getElementById('options');
+                this.scoreElement = document.getElementById('score');
+                this.languageHintElement = document.getElementById('language-hint');
+                
+                // Preload audio files
+                this.audioElements = {};
+                this.preloadAudio();
+            }
+
+            preloadAudio() {
+                const numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+                const languages = ['spanish', 'hebrew'];
+
+                languages.forEach(lang => {
+                    this.audioElements[lang] = {};
+                    numbers.forEach(num => {
+                        const audio = new Audio();
+                        audio.src = this.getAudioUrl(lang, num);
+                        this.audioElements[lang][num] = audio;
+                    });
+                });
+            }
+
+            getAudioUrl(language, number) {
+                // Replace these with actual audio file URLs
+                const audioUrls = {
+                    spanish: {
+                        0: '/audio/spanish/zero.mp3',
+                        1: '/audio/spanish/one.mp3',
+                        2: '/audio/spanish/two.mp3',
+                        3: '/audio/spanish/three.mp3',
+                        4: '/audio/spanish/four.mp3',
+                        5: '/audio/spanish/five.mp3',
+                        6: '/audio/spanish/six.mp3',
+                        7: '/audio/spanish/seven.mp3',
+                        8: '/audio/spanish/eight.mp3',
+                        9: '/audio/spanish/nine.mp3',
+                        10: '/audio/spanish/ten.mp3'
+                    },
+                    hebrew: {
+                        0: '/audio/hebrew/zero.mp3',
+                        1: '/audio/hebrew/one.mp3',
+                        2: '/audio/hebrew/two.mp3',
+                        3: '/audio/hebrew/three.mp3',
+                        4: '/audio/hebrew/four.mp3',
+                        5: '/audio/hebrew/five.mp3',
+                        6: '/audio/hebrew/six.mp3',
+                        7: '/audio/hebrew/seven.mp3',
+                        8: '/audio/hebrew/eight.mp3',
+                        9: '/audio/hebrew/nine.mp3',
+                        10: '/audio/hebrew/ten.mp3'
+                    }
+                };
+                return audioUrls[language][number] || '';
+            }
+
+            playAudio(language, number) {
+                const audio = this.audioElements[language][number];
+                if (audio) {
+                    audio.currentTime = 0;
+                    audio.play().catch(error => console.log('Audio play failed:', error));
+                }
+            }
+
+            generateQuestion() {
+                const num1 = Math.floor(Math.random() * 10) + 1;
+                const num2 = Math.floor(Math.random() * 10) + 1;
+                const result = num1 + num2;
+
+                const questionText = `${translations.words.equals.hebrew} ${translations.numbers.spanish[num1]} ${translations.words.plus.hebrew} ${translations.numbers.spanish[num2]}?`;
+                const correctAnswer = result;
+                const options = this.generateOptions(correctAnswer);
+
+                this.questionElement.textContent = questionText;
+                this.languageHintElement.textContent = `ספרדית: ${translations.numbers.spanish[num1]} = ${num1}, ${translations.numbers.spanish[num2]} = ${num2}`;
+                this.renderOptions(options, correctAnswer, num1, num2);
+            }
+
+            generateOptions(correctAnswer) {
+                const options = [correctAnswer];
+                while(options.length < 4) {
+                    const option = Math.floor(Math.random() * 20) + 1;
+                    if (!options.includes(option)) {
+                        options.push(option);
+                    }
+                }
+                return options.sort(() => Math.random() - 0.5);
+            }
+
+            renderOptions(options, correctAnswer, num1, num2) {
+                this.optionsElement.innerHTML = '';
+                options.forEach(option => {
+                    const container = document.createElement('div');
+                    
+                    const button = document.createElement('button');
+                    button.textContent = translations.numbers.hebrew[option] || option;
+                    button.classList.add('option-btn');
+                    button.onclick = () => this.checkAnswer(option, correctAnswer);
+                    
+                    const audioBtn = document.createElement('button');
+                    audioBtn.textContent = '🔊';
+                    audioBtn.classList.add('audio-btn');
+                    audioBtn.onclick = () => this.playAudio('hebrew', option);
+
+                    container.appendChild(button);
+                    container.appendChild(audioBtn);
+                    this.optionsElement.appendChild(container);
+                });
+
+                // Add audio buttons for question numbers
+                const questionAudioContainer = document.createElement('div');
+                
+                const num1AudioBtn = document.createElement('button');
+                num1AudioBtn.textContent = `🔊 ${translations.numbers.spanish[num1]}`;
+                num1AudioBtn.classList.add('audio-btn');
+                num1AudioBtn.onclick = () => this.playAudio('spanish', num1);
+                
+                const num2AudioBtn = document.createElement('button');
+                num2AudioBtn.textContent = `🔊 ${translations.numbers.spanish[num2]}`;
+                num2AudioBtn.classList.add('audio-btn');
+                num2AudioBtn.onclick = () => this.playAudio('spanish', num2);
+
+                questionAudioContainer.appendChild(num1AudioBtn);
+                questionAudioContainer.appendChild(num2AudioBtn);
+                this.optionsElement.appendChild(questionAudioContainer);
+            }
+
+            checkAnswer(selectedAnswer, correctAnswer) {
+                if (selectedAnswer === correctAnswer) {
+                    this.score++;
+                    this.scoreElement.textContent = `ניקוד: ${this.score}`;
+                }
+                this.generateQuestion();
+            }
+
+            start() {
+                this.generateQuestion();
+            }
+        }
+
+        const game = new SpanishMathLearningGame();
+        game.start();
+    </script>
+</body>
+</html>
